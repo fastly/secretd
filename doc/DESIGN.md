@@ -202,9 +202,8 @@ The ability to find a secret and discover any leaf nodes.
 ### group_manage
 
 The ability to create, update and remove groups.  The key is in this
-case null.
-
-XXX: should this be limited to some hierarchy?
+case null.  For the initial implementation, this is a binary flag.
+This might change in later releases.
 
 ## built-in/magic groups
 
