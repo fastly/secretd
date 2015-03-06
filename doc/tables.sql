@@ -2,8 +2,8 @@
 CREATE TABLE secrets (
        secret_id serial PRIMARY KEY,
        parent int REFERENCES secrets,
-       key text,
-       value text
+       key text NOT NULL,
+       value bytea
 );
 
 CREATE TABLE acl_types (
@@ -31,7 +31,7 @@ CREATE TABLE principals (
 );
 
 CREATE TABLE group_membership (
-       group_id int REFERENCES groups,
+       group_id int REFERENCES groups ON DELETE CASCADE,
        principal_id int REFERENCES principals ON DELETE CASCADE,
        PRIMARY_KEY(group_id, principal_id)
-)
+);
