@@ -205,6 +205,11 @@ The ability to create, update and remove groups.  The key is in this
 case null.  For the initial implementation, this is a binary flag.
 This might change in later releases.
 
+### enrol
+
+The ability to enrol new hosts. The key is in this case null. This is
+a binary flag.
+
 ## built-in/magic groups
 
 ### all
