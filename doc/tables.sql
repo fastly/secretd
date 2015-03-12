@@ -25,7 +25,7 @@ CREATE TABLE groups (
 
 CREATE TABLE principals (
        principal_id serial PRIMARY KEY,
-       name text,
+       name text,  -- XXX: add constraint on ok characters
        ssh_key text, -- XXX: add constraint on ok characters
        provisioned boolean -- needed? Key off ssh_key?
 );
