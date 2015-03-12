@@ -66,7 +66,7 @@ returns an error.
 
     {
 		"action": "authorize",
-		"user": "cache-lcy1120"
+		"principal": "cache-lcy1120"
 	}
 
 Authorizes the connection for the user.  Can only be used once (per
