@@ -11,16 +11,16 @@ CREATE TABLE acl_types (
        name text
 );
 
+CREATE TABLE groups (
+       group_id serial PRIMARY KEY,
+       name text
+);
+
 CREATE TABLE acls (
        acl_id serial PRIMARY KEY,
        secret_id int REFERENCES secrets ON DELETE CASCADE,
        group_id int REFERENCES groups ON DELETE CASCADE,
        acl_type_id int REFERENCES acl_types
-);
-
-CREATE TABLE groups (
-       group_id serial PRIMARY KEY,
-       name text
 );
 
 CREATE TABLE principals (
