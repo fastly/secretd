@@ -7,7 +7,28 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net"
+	"strings"
 )
+
+func getSecret(db *sql.DB, key []string) (secret string, err error) {
+	// XXX: the pq driver should just be taught how to do arrays..
+	k := "{" + strings.Join(key, ",") + "}"
+	rows, err := db.Query("SELECT value FROM secret_tree WHERE path = $1::text[]", k)
+	if err != nil {
+		log.Fatal(err)
+		return "", err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		// XXX: add actual error
+		return "", nil
+	}
+	rows.Scan(&secret)
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return secret, err
+}
 
 func secretServer(c net.Conn, db *sql.DB) {
 	/* state machine layout:
@@ -64,7 +85,14 @@ func secretServer(c net.Conn, db *sql.DB) {
 			model.SendReplySimpleError(c, "Unexpected authorization message")
 			return
 		case *model.SecretGetMessage:
-			spew.Dump(m)
+			secret, err := getSecret(db, m.Key)
+			if err != nil {
+			/* XXX: secret not found */
+			log.Printf("secret not found?\n", err)
+				continue
+			}
+			resp := model.GenericResponseJSON{Status: "ok", Value: secret}
+			err = model.SendReply(c, resp)
 		default:
 			panic("Unknown message:")
 			spew.Dump(m)

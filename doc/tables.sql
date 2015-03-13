@@ -40,3 +40,4 @@ CREATE TABLE group_membership (
        PRIMARY KEY(group_id, principal_id)
 );
 GRANT SELECT, INSERT, UPDATE, DELETE ON group_membership to secretd;
+

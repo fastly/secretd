@@ -71,6 +71,7 @@ type GenericResponse interface {
 type GenericResponseJSON struct {
 	Status string `json:"status"`
 	Reason string `json:"reason,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 func SendReply(w io.Writer, response GenericResponse) (err error) {

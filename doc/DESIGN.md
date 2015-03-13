@@ -72,7 +72,7 @@ returns an error.
 Return value:
 
     {
-		status: "ok"
+		"status": "ok"
     }
 
 Authorizes the connection for the user.  Can only be used once (per
@@ -97,7 +97,16 @@ default only the inherited ACLs apply to the node.
 		"key": ["a", "b", "c"],
     }
 
-Returns the secret stored under the given key.
+Return value:
+
+    {
+		"status": "ok"
+		"value": "foo"
+		
+    }
+
+Returns the secret stored under the given key.  The string may contain
+hex escapes.
 
 ### discovering structure
 
@@ -225,7 +234,7 @@ can be granted permissions as any other group.
 
 ## what do we need to build?
 
-- database schema
+✓ database schema
 - socket protocol
 - define ACLs
 
@@ -246,3 +255,5 @@ can be granted permissions as any other group.
 - lock down ssh options (from, forcecommand)
 
 - return messages, including errors
+
+- audit logs, log to syslog or in db?
