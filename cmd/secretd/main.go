@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "database/sql"
+	"database/sql"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fastly/secretd/model"
 	_ "github.com/lib/pq"
@@ -9,7 +9,7 @@ import (
 	"net"
 )
 
-func secretServer(c net.Conn) {
+func secretServer(c net.Conn, db *sql.DB) {
 	/* state machine layout:
 	   - enrol-then-terminate OR
 	   - authorize
@@ -32,6 +32,18 @@ func secretServer(c net.Conn) {
 	switch m := authMessage.(type) {
 	case *model.AuthorizationMessage:
 		principal = m.Principal
+		rows, err := db.Query("SELECT name FROM principals WHERE name = $1 AND provisioned = true", principal)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+		if !rows.Next() {
+			model.SendReplySimpleError(c, "No such principal")
+			return
+		}
+		if err := rows.Err(); err != nil {
+			log.Fatal(err)
+		}
 		model.SendReplySimpleOK(c)
 	default:
 		model.SendReplySimpleError(c, "Missing authorization message")
@@ -73,31 +85,12 @@ func main() {
 			log.Fatal("accept error:", err)
 		}
 
-		go secretServer(fd)
-	}
-}
-
-/*func main() {
-	db, err := sql.Open("postgres", "user=secretd dbname=secrets host=/run/postgresql sslmode=disable")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	rows, err := db.Query("SELECT 5*5")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		var i int
-		if err := rows.Scan(&i); err != nil {
+		/* XXX: make connection string configurable */
+		db, err := sql.Open("postgres", "user=secretd dbname=secrets host=/run/postgresql sslmode=disable")
+		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("%d\n", i)
-	}
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+
+		go secretServer(fd, db)
 	}
 }
-*/
