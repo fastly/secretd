@@ -57,7 +57,7 @@ or more arguments.
 		"action": "enrol",
 		"principal": "cache-lcy1120",
 		"key": "ssh-rsa …"
-	}
+    }
 
 Adds the user to the list of users.  If the user already exists,
 returns an error.
@@ -78,7 +78,7 @@ connection) and must be used at the start of the connection.
 		"action": "secret.put",
 		"key": ["a", "b", "c"],
 		"value": "s3kr1t"
-	}
+    }
 
 Stores `s3kr1t` under the key given by key.  Any intermediary nodes in
 the tree are created.  Any ACLs need to be explicitly applied, by
@@ -89,7 +89,7 @@ default only the inherited ACLs apply to the node.
     {
 		"action": "secret.get",
 		"key": ["a", "b", "c"],
-	}
+    }
 
 Returns the secret stored under the given key.
 
@@ -98,7 +98,7 @@ Returns the secret stored under the given key.
     {
 		"action": "secret.list",
 		"key": ["a", "b"],
-	}
+    }
 
 Returns a list of the key's immediate children keys.
 
@@ -111,7 +111,7 @@ Returns a list of the key's immediate children keys.
 		"key": ["a", "b", "c"],
 		"subject": "cache-lcy1120",
 		"permissions": [ "read" ]
-	}
+    }
 
 Replaces any existing ACLs for the particular subject.  An empty
 permissions set will delete the ACL for the user.
@@ -121,7 +121,7 @@ permissions set will delete the ACL for the user.
     {
 		"action": "acl.get",
 		"key": ["a", "b", "c"],
-	}
+    }
 
 Return value:
 
@@ -132,7 +132,7 @@ Return value:
 		"principals": {
 			"cache-lcy1120": [ "read" ]
 		}
-	}
+    }
 
 ### group management
 
@@ -141,7 +141,7 @@ Return value:
     {
 		"action": "group.create",
 		"group": "ops"
-	}
+    }
 
 
 
@@ -151,7 +151,7 @@ Return value:
 		"action": "group.member_add",
 		"group": "ops",
 		"member": "tfheen"
-	}
+    }
 
 #### remove member from group
 
@@ -159,21 +159,21 @@ Return value:
 		"action": "group.member_remove",
 		"group": "ops",
 		"member": "tfheen"
-	}
+    }
 
 #### retrieve group
 
     {
 		"action": "group.get",
 		"group": "ops"
-	}
+    }
 
 #### delete group
 
     {
 		"action": "group.delete",
 		"group": "ops"
-	}
+    }
 
 #### list groups
 
