@@ -34,7 +34,7 @@ func secretServer(c net.Conn) {
 		principal = m.Principal
 		model.SendReplySimpleOK(c)
 	default:
-		model.SendReplySimpleError("Missing authorization message")
+		model.SendReplySimpleError(c, "Missing authorization message")
 		return
 	}
 
