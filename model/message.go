@@ -44,9 +44,8 @@ func (m SecretGetMessage) SetAction(s string) {
 func GetMessage(r io.Reader) (m GenericMessage, err error) {
 	var rawmessage json.RawMessage
 	var message GenericMessageJSON
-	dec := json.NewDecoder(r)
-	err = dec.Decode(&rawmessage)
-	if err != nil {
+
+	if err = json.NewDecoder(r).Decode(&rawmessage); err != nil {
 		return nil, err
 	}
 	err = json.Unmarshal(rawmessage, &message)
