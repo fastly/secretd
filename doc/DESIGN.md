@@ -67,7 +67,13 @@ returns an error.
     {
 		"action": "authorize",
 		"principal": "cache-lcy1120"
-	}
+    }
+
+Return value:
+
+    {
+		status: "ok"
+    }
 
 Authorizes the connection for the user.  Can only be used once (per
 connection) and must be used at the start of the connection.
