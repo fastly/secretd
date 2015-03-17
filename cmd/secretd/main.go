@@ -3,11 +3,34 @@ package main
 import (
 	"database/sql"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/fastly/secretd/model"
+	model "github.com/fastly/secretd/model/message/server"
+	message "github.com/fastly/secretd/model/message"
 	_ "github.com/lib/pq"
 	"log"
 	"net"
+	"strings"
+	"errors"
 )
+
+func getSecret(db *sql.DB, key []string) (secret string, err error) {
+	// XXX: the pq driver should just be taught how to do arrays..
+	k := "{" + strings.Join(key, ",") + "}"
+	rows, err := db.Query("SELECT value FROM secret_tree WHERE path = $1::text[]", k)
+	if err != nil {
+		log.Fatal(err)
+		return "", err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		// XXX: add actual error
+		return "", errors.New("Not found")
+	}
+	rows.Scan(&secret)
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return secret, err
+}
 
 func secretServer(c net.Conn, db *sql.DB) {
 	/* state machine layout:
@@ -30,7 +53,7 @@ func secretServer(c net.Conn, db *sql.DB) {
 	/* State machine */
 	spew.Dump(authMessage)
 	switch m := authMessage.(type) {
-	case *model.AuthorizationMessage:
+	case *message.AuthorizationMessage:
 		principal = m.Principal
 		rows, err := db.Query("SELECT name FROM principals WHERE name = $1 AND provisioned = true", principal)
 		if err != nil {
@@ -44,7 +67,8 @@ func secretServer(c net.Conn, db *sql.DB) {
 		if err := rows.Err(); err != nil {
 			log.Fatal(err)
 		}
-		model.SendReplySimpleOK(c)
+		reply := message.AuthorizationReplyMessage{Action: "authorize", Status: "ok"}
+		model.SendReply(c, reply)
 	default:
 		model.SendReplySimpleError(c, "Missing authorization message")
 		return
@@ -53,18 +77,27 @@ func secretServer(c net.Conn, db *sql.DB) {
 	// Authorized as $principal, start next step of state machine
 	spew.Dump(principal)
 	for {
-		message, err := model.GetMessage(c)
+		gm, err := model.GetMessage(c)
 		if err != nil {
 			/* XXX: log */
 			log.Printf("got %s, exiting loop\n", err)
 			return
 		}
-		switch m := message.(type) {
-		case *model.AuthorizationMessage:
+		switch m := gm.(type) {
+		case *message.AuthorizationMessage:
 			model.SendReplySimpleError(c, "Unexpected authorization message")
 			return
-		case *model.SecretGetMessage:
-			spew.Dump(m)
+		case *message.SecretGetMessage:
+			secret, err := getSecret(db, m.Key)
+			if err != nil {
+				/* XXX: secret not found */
+				log.Printf("secret not found?\n", err)
+				reply := message.SecretGetReplyMessage{Action: "secret.get", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.GenericReplyJSON{Status: "ok", Action: "secret.get", Value: secret}
+			err = model.SendReply(c, resp)
 		default:
 			panic("Unknown message:")
 			spew.Dump(m)
