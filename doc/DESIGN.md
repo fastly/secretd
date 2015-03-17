@@ -72,7 +72,8 @@ returns an error.
 Return value:
 
     {
-		status: "ok"
+		"action": "authorize",
+		"status": "ok"
     }
 
 Authorizes the connection for the user.  Can only be used once (per
@@ -97,7 +98,16 @@ default only the inherited ACLs apply to the node.
 		"key": ["a", "b", "c"],
     }
 
-Returns the secret stored under the given key.
+Return value:
+
+    {
+		"status": "ok",
+		"action": "secret.get",
+		"value": "foo"
+    }
+
+Returns the secret stored under the given key.  The string may be
+escaped (according to JSON's escape rules).
 
 ### discovering structure
 
