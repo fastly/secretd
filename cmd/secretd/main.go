@@ -173,8 +173,7 @@ func secretServer(c net.Conn, db *sql.DB) {
 		case *message.SecretListMessage:
 			keys, err := listSecrets(db, principal, m.Key)
 			if err != nil {
-				/* XXX: secret not found */
-				log.Printf("something went wrong: %s\n", err)
+				log.Printf("Something went wrong: %s\n", err)
 				reply := message.SecretListReplyMessage{Action: "secret.list", Status: "error", Reason: err.Error()}
 				model.SendReply(c, reply)
 				continue
