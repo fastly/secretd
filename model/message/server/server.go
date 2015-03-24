@@ -27,6 +27,8 @@ func GetMessage(r io.Reader) (ret message.GenericMessage, err error) {
 		ret = new(message.SecretPutMessage)
 	case "secret.list":
 		ret = new(message.SecretListMessage)
+	case "group.list":
+		ret = new(message.GroupListMessage)
 	default:
 		// XXX: handle this more gracefully
 		panic("Unknown message type")

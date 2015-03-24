@@ -49,3 +49,16 @@ FROM    acl_graph a, secret_tree s
 WHERE arraycontains(s.path, a.path);
 
 GRANT SELECT on acl_tree TO secretd;
+
+CREATE OR REPLACE VIEW acl_non_hierarchical AS
+SELECT  p.name AS principal, acl_types.name AS acl_type
+FROM    acls a
+JOIN    acl_types
+ON      acl_types.acl_type_id = a.acl_type_id
+JOIN    group_membership g
+ON      a.group_id = g.group_id
+JOIN    principals p
+ON      p.principal_id = g.principal_id
+WHERE a.secret_id IS NULL;
+
+GRANT SELECT on acl_non_hierarchical TO secretd;
