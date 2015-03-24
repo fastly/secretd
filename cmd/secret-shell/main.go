@@ -1,20 +1,21 @@
 package main
 
 import (
+	"bufio"
+	"flag"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/fastly/secretd/model/message/client"
 	"github.com/fastly/secretd/model/message"
+	"github.com/fastly/secretd/model/message/client"
 	"log"
 	"net"
-	"flag"
 	"os"
-	"bufio"
 )
 
 var principal string
-var action string 
+var action string
 
 var flagvar int
+
 func init() {
 	flag.StringVar(&principal, "principal", "", "principal to authorize as")
 	flag.StringVar(&action, "action", "", "action")
@@ -27,7 +28,7 @@ func main() {
 		flag.Usage()
 		return
 	}
-	
+
 	// XXX: make socket location configurable
 	c, err := net.Dial("unix", "/tmp/secretd.sock")
 	if err != nil {
@@ -101,7 +102,7 @@ func main() {
 			println(m.Reason)
 			os.Exit(1)
 		}
-		for _,key := range m.Keys {
+		for _, key := range m.Keys {
 			println(key)
 		}
 	default:

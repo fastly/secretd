@@ -2,14 +2,14 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/davecgh/go-spew/spew"
-	model "github.com/fastly/secretd/model/message/server"
 	message "github.com/fastly/secretd/model/message"
+	model "github.com/fastly/secretd/model/message/server"
 	_ "github.com/lib/pq"
 	"log"
 	"net"
 	"strings"
-	"errors"
 )
 
 func getSecret(db *sql.DB, principal string, key []string) (secret string, err error) {
@@ -92,7 +92,6 @@ func putSecret(db *sql.DB, principal string, key []string, secret string) (err e
 	rows.Close()
 	return err
 }
-
 
 func secretServer(c net.Conn, db *sql.DB) {
 	/* state machine layout:

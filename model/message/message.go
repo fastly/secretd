@@ -83,10 +83,10 @@ func NewSecretListMessage(key []string) SecretListMessage {
 }
 
 type SecretListReplyMessage struct {
-	Action string `json:"action"`
-	Status string `json:"status"`
-	Reason string `json:"reason,omitempty"`
-	Keys  []string `json:"keys"`
+	Action string   `json:"action"`
+	Status string   `json:"status"`
+	Reason string   `json:"reason,omitempty"`
+	Keys   []string `json:"keys"`
 }
 
 func NewSecretListReplyMessage(status string, keys []string) SecretListReplyMessage {

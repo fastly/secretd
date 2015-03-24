@@ -3,8 +3,8 @@ package client
 import (
 	"encoding/json"
 	"github.com/davecgh/go-spew/spew"
-	"io"
 	message "github.com/fastly/secretd/model/message"
+	"io"
 )
 
 func SendMessage(w io.Writer, m message.GenericMessage) (err error) {
