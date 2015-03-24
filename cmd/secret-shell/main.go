@@ -86,6 +86,24 @@ func main() {
 			os.Exit(1)
 		}
 		println("Secret updated")
+	case "secret.list":
+		client.SendMessage(c, message.NewSecretListMessage(flag.Args()))
+		m, err = client.GetMessage(c)
+		if err != nil {
+			panic(err)
+		}
+		m, ok := m.(*message.SecretListReplyMessage)
+		if !ok {
+			spew.Dump(m, ok)
+			panic("Type conversion failed")
+		}
+		if m.Status != "ok" {
+			println(m.Reason)
+			os.Exit(1)
+		}
+		for _,key := range m.Keys {
+			println(key)
+		}
 	default:
 		log.Fatal("Unknown action %s", action)
 	}

@@ -32,6 +32,29 @@ func getSecret(db *sql.DB, principal string, key []string) (secret string, err e
 	return secret, err
 }
 
+func listSecrets(db *sql.DB, principal string, key []string) (allowedKeys []string, err error) {
+	// XXX: the pq driver should just be taught how to do arrays..
+	k := "{" + strings.Join(key, ",") + "}"
+	rows, err := db.Query("SELECT path FROM acl_tree WHERE principal = $1 AND acl_type = 'discover' AND arraycontains(path,$2::text[])", principal, k)
+	if err != nil {
+		log.Fatal(err)
+		return []string{}, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var path string
+		err = rows.Scan(&path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		allowedKeys = append(allowedKeys, path)
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return allowedKeys, err
+}
+
 func putSecret(db *sql.DB, principal string, key []string, secret string) (err error) {
 	// XXX: the pq driver should just be taught how to do arrays..
 	var id uint64
@@ -148,6 +171,17 @@ func secretServer(c net.Conn, db *sql.DB) {
 				continue
 			}
 			resp := message.GenericReplyJSON{Status: "ok", Action: "secret.put"}
+			err = model.SendReply(c, resp)
+		case *message.SecretListMessage:
+			keys, err := listSecrets(db, principal, m.Key)
+			if err != nil {
+				/* XXX: secret not found */
+				log.Printf("something went wrong: %s\n", err)
+				reply := message.SecretListReplyMessage{Action: "secret.list", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewSecretListReplyMessage("ok", keys)
 			err = model.SendReply(c, resp)
 		default:
 			panic("Unknown message:")
