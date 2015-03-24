@@ -28,6 +28,7 @@ func GetMessage(r io.Reader) (ret message.GenericMessage, err error) {
 	case "secret.list":
 		ret = new(message.SecretListMessage)
 	default:
+		// XXX: handle this more gracefully
 		panic("Unknown message type")
 	}
 	err = json.Unmarshal(rawmessage, &ret)
