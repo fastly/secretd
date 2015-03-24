@@ -200,6 +200,22 @@ Return value:
 
 #### list groups
 
+    {
+		"action": "group.list",
+    }
+
+Return value:
+
+    {
+		"action": "group.list",
+		"groups": [
+			"ops",
+			"caches"
+		]
+    }
+
+Lists all groups
+
 ## ACL primitives
 
 ACLs are additive and positive, there is no way to grant A access to
