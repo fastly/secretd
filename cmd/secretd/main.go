@@ -161,7 +161,6 @@ func secretServer(c net.Conn, db *sql.DB) {
 			resp := message.GenericReplyJSON{Status: "ok", Action: "secret.get", Value: secret}
 			err = model.SendReply(c, resp)
 		case *message.SecretPutMessage:
-			// XXX: check ACL
 			err := putSecret(db, principal, m.Key, m.Value)
 			if err != nil {
 				/* XXX: secret not found */
