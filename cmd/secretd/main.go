@@ -12,10 +12,10 @@ import (
 	"errors"
 )
 
-func getSecret(db *sql.DB, key []string) (secret string, err error) {
+func getSecret(db *sql.DB, principal string, key []string) (secret string, err error) {
 	// XXX: the pq driver should just be taught how to do arrays..
 	k := "{" + strings.Join(key, ",") + "}"
-	rows, err := db.Query("SELECT value FROM secret_tree WHERE path = $1::text[]", k)
+	rows, err := db.Query("SELECT value FROM acl_tree WHERE principal = $1 AND acl_type = 'read' AND path = $2::text[]", principal, k)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -23,7 +23,7 @@ func getSecret(db *sql.DB, key []string) (secret string, err error) {
 	defer rows.Close()
 	if !rows.Next() {
 		// XXX: add actual error
-		return "", errors.New("Not found")
+		return "", errors.New("Not found or permission denied")
 	}
 	rows.Scan(&secret)
 	if err := rows.Err(); err != nil {
@@ -32,11 +32,22 @@ func getSecret(db *sql.DB, key []string) (secret string, err error) {
 	return secret, err
 }
 
-func putSecret(db *sql.DB, key []string, secret string) (err error) {
+func putSecret(db *sql.DB, principal string, key []string, secret string) (err error) {
 	// XXX: the pq driver should just be taught how to do arrays..
-	var id uint64;
+	var id uint64
 	k := "{" + strings.Join(key, ",") + "}"
-	rows, err := db.Query("SELECT path_create_missing_elements from path_create_missing_elements($1::text[])", k)
+	// Check ACL
+	rows, err := db.Query("SELECT * FROM acl_tree WHERE arraycontains($1::text[], acl_tree.path) AND acl_type = 'write'", k)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		// XXX: add actual error
+		return errors.New("Permission denied")
+	}
+	rows, err = db.Query("SELECT path_create_missing_elements from path_create_missing_elements($1::text[])", k)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -116,7 +127,7 @@ func secretServer(c net.Conn, db *sql.DB) {
 			model.SendReplySimpleError(c, "Unexpected authorization message")
 			return
 		case *message.SecretGetMessage:
-			secret, err := getSecret(db, m.Key)
+			secret, err := getSecret(db, principal, m.Key)
 			if err != nil {
 				/* XXX: secret not found */
 				log.Printf("secret not found?\n", err)
@@ -128,7 +139,7 @@ func secretServer(c net.Conn, db *sql.DB) {
 			err = model.SendReply(c, resp)
 		case *message.SecretPutMessage:
 			// XXX: check ACL
-			err := putSecret(db, m.Key, m.Value)
+			err := putSecret(db, principal, m.Key, m.Value)
 			if err != nil {
 				/* XXX: secret not found */
 				log.Printf("something went wrong: %s\n", err)
