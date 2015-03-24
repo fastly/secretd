@@ -87,6 +87,13 @@ connection) and must be used at the start of the connection.
 		"value": "s3kr1t"
     }
 
+Return value:
+
+    {
+		"action": "secret.put",
+		"status": "ok"
+    }
+
 Stores `s3kr1t` under the key given by key.  Any intermediary nodes in
 the tree are created.  Any ACLs need to be explicitly applied, by
 default only the inherited ACLs apply to the node.
