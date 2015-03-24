@@ -32,6 +32,34 @@ func getSecret(db *sql.DB, key []string) (secret string, err error) {
 	return secret, err
 }
 
+func putSecret(db *sql.DB, key []string, secret string) (err error) {
+	// XXX: the pq driver should just be taught how to do arrays..
+	var id uint64;
+	k := "{" + strings.Join(key, ",") + "}"
+	rows, err := db.Query("SELECT path_create_missing_elements from path_create_missing_elements($1::text[])", k)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		// XXX: add actual error
+		return errors.New("Error inserting path")
+	}
+	rows.Scan(&id)
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	rows, err = db.Query("UPDATE secrets SET value = $1 WHERE secret_id = $2", secret, id)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	rows.Close()
+	return err
+}
+
+
 func secretServer(c net.Conn, db *sql.DB) {
 	/* state machine layout:
 	   - enrol-then-terminate OR
@@ -97,6 +125,18 @@ func secretServer(c net.Conn, db *sql.DB) {
 				continue
 			}
 			resp := message.GenericReplyJSON{Status: "ok", Action: "secret.get", Value: secret}
+			err = model.SendReply(c, resp)
+		case *message.SecretPutMessage:
+			// XXX: check ACL
+			err := putSecret(db, m.Key, m.Value)
+			if err != nil {
+				/* XXX: secret not found */
+				log.Printf("something went wrong: %s\n", err)
+				reply := message.SecretPutReplyMessage{Action: "secret.put", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.GenericReplyJSON{Status: "ok", Action: "secret.put"}
 			err = model.SendReply(c, resp)
 		default:
 			panic("Unknown message:")

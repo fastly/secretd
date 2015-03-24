@@ -23,6 +23,8 @@ func GetMessage(r io.Reader) (ret message.GenericMessage, err error) {
 		ret = new(message.AuthorizationMessage)
 	case "secret.get":
 		ret = new(message.SecretGetMessage)
+	case "secret.put":
+		ret = new(message.SecretPutMessage)
 	default:
 		panic("Unknown message type")
 	}

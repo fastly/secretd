@@ -8,6 +8,7 @@ import (
 	"net"
 	"flag"
 	"os"
+	"bufio"
 )
 
 var principal string
@@ -63,6 +64,28 @@ func main() {
 			os.Exit(1)
 		}
 		println(m.Value)
+
+	case "secret.put":
+		secret, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		if err != nil {
+			panic(err)
+		}
+		secret = secret[:len(secret)-1]
+		client.SendMessage(c, message.NewSecretPutMessage(flag.Args(), secret))
+		m, err = client.GetMessage(c)
+		if err != nil {
+			panic(err)
+		}
+		m, ok := m.(*message.SecretPutReplyMessage)
+		if !ok {
+			spew.Dump(m, ok)
+			panic("Type conversion failed")
+		}
+		if m.Status != "ok" {
+			println(m.Reason)
+			os.Exit(1)
+		}
+		println("Secret updated")
 	default:
 		log.Fatal("Unknown action %s", action)
 	}

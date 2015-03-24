@@ -50,6 +50,28 @@ func NewSecretGetReplyMessage(status string) SecretGetReplyMessage {
 	return m
 }
 
+type SecretPutMessage struct {
+	Action string   `json:"action"`
+	Key    []string `json:"key"`
+	Value  string   `json:"value"`
+}
+
+func NewSecretPutMessage(key []string, secret string) SecretPutMessage {
+	m := SecretPutMessage{Action: "secret.put", Key: key, Value: secret}
+	return m
+}
+
+type SecretPutReplyMessage struct {
+	Action string `json:"action"`
+	Status string `json:"status"`
+	Reason string `json:"reason,omitempty"`
+}
+
+func NewSecretPutReplyMessage(status string) SecretPutReplyMessage {
+	m := SecretPutReplyMessage{Action: "secret.put", Status: status}
+	return m
+}
+
 type GenericReply interface {
 }
 

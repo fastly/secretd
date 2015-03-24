@@ -32,6 +32,8 @@ func GetMessage(r io.Reader) (m message.GenericMessage, err error) {
 		m = new(message.AuthorizationReplyMessage)
 	case "secret.get":
 		m = new(message.SecretGetReplyMessage)
+	case "secret.put":
+		m = new(message.SecretPutReplyMessage)
 	default:
 		spew.Dump(rawmessage, gm)
 		panic("Unknown message type")
