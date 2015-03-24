@@ -35,3 +35,22 @@ func listGroups(db *sql.DB, principal string) (groups []string, err error) {
 	}
 	return groups, err
 }
+
+func createGroup(db *sql.DB, principal, group string) (err error) {
+	rows, err := db.Query("SELECT * FROM acl_non_hierarchical WHERE principal = $1 AND acl_type = 'group_manage'", principal)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return errors.New("Permission denied")
+	}
+
+	_, err = db.Exec("INSERT INTO groups(name) VALUES ($1)", group)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return err
+}

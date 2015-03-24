@@ -123,6 +123,22 @@ func main() {
 		for _, key := range m.Groups {
 			println(key)
 		}
+	case "group.create":
+		client.SendMessage(c, message.NewGroupCreateMessage(flag.Arg(0)))
+		m, err = client.GetMessage(c)
+		if err != nil {
+			panic(err)
+		}
+		m, ok := m.(*message.GroupCreateReplyMessage)
+		if !ok {
+			spew.Dump(m, ok)
+			panic("Type conversion failed")
+		}
+		if m.Status != "ok" {
+			println(m.Reason)
+			os.Exit(1)
+		}
+		println("Group created")
 	default:
 		log.Fatal("Unknown action %s", action)
 	}

@@ -191,6 +191,16 @@ func secretServer(c net.Conn, db *sql.DB) {
 			}
 			resp := message.NewGroupListReplyMessage("ok", groups)
 			err = model.SendReply(c, resp)
+		case *message.GroupCreateMessage:
+			err := createGroup(db, principal, m.Group)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.GroupListReplyMessage{Action: "group.create", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewGroupCreateReplyMessage("ok")
+			err = model.SendReply(c, resp)
 		default:
 			panic("Unknown message:")
 			spew.Dump(m)
