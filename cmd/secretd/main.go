@@ -12,9 +12,18 @@ import (
 	"strings"
 )
 
+// dbArrayToString converts a string slice into an array that can be
+// used using normal placeholders. It's not too great, but until the
+// pq driver is taught how to do arrays, (see
+// https://github.com/lib/pq/issues/327 for bug), it's what we have.
+func dbArrayToString(s []string) string {
+	// XXX: rules are: contains comma: add " around, "s are \-escaped, \ is \-escaped too
+	return "{" + strings.Join(s, ",") + "}"
+}
+
 func getSecret(db *sql.DB, principal string, key []string) (secret string, err error) {
-	// XXX: the pq driver should just be taught how to do arrays..
-	k := "{" + strings.Join(key, ",") + "}"
+	k := dbArrayToString(key)
+	spew.Dump(key, k)
 	rows, err := db.Query("SELECT value FROM acl_tree WHERE principal = $1 AND acl_type = 'read' AND path = $2::text[]", principal, k)
 	if err != nil {
 		log.Fatal(err)
@@ -33,8 +42,7 @@ func getSecret(db *sql.DB, principal string, key []string) (secret string, err e
 }
 
 func listSecrets(db *sql.DB, principal string, key []string) (allowedKeys []string, err error) {
-	// XXX: the pq driver should just be taught how to do arrays..
-	k := "{" + strings.Join(key, ",") + "}"
+	k := dbArrayToString(key)
 	rows, err := db.Query("SELECT path FROM acl_tree WHERE principal = $1 AND acl_type = 'discover' AND arraycontains(path,$2::text[])", principal, k)
 	if err != nil {
 		log.Fatal(err)
@@ -56,9 +64,8 @@ func listSecrets(db *sql.DB, principal string, key []string) (allowedKeys []stri
 }
 
 func putSecret(db *sql.DB, principal string, key []string, secret string) (err error) {
-	// XXX: the pq driver should just be taught how to do arrays..
 	var id uint64
-	k := "{" + strings.Join(key, ",") + "}"
+	k := dbArrayToString(key)
 	// Check ACL
 	rows, err := db.Query("SELECT * FROM acl_tree WHERE arraycontains($1::text[], acl_tree.path) AND acl_type = 'write'", k)
 	if err != nil {
