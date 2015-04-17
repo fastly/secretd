@@ -92,7 +92,6 @@ func main() {
 		}
 		m, ok := m.(*message.SecretGetReplyMessage)
 		if !ok {
-			spew.Dump(m, ok)
 			panic("Type conversion failed")
 		}
 		if m.Status != "ok" {
@@ -114,7 +113,6 @@ func main() {
 		}
 		m, ok := m.(*message.SecretPutReplyMessage)
 		if !ok {
-			spew.Dump(m, ok)
 			panic("Type conversion failed")
 		}
 		if m.Status != "ok" {
@@ -130,7 +128,6 @@ func main() {
 		}
 		m, ok := m.(*message.SecretListReplyMessage)
 		if !ok {
-			spew.Dump(m, ok)
 			panic("Type conversion failed")
 		}
 		if m.Status != "ok" {
@@ -148,7 +145,6 @@ func main() {
 		}
 		m, ok := m.(*message.GroupListReplyMessage)
 		if !ok {
-			spew.Dump(m, ok)
 			panic("Type conversion failed")
 		}
 		if m.Status != "ok" {
@@ -166,7 +162,6 @@ func main() {
 		}
 		m, ok := m.(*message.GroupCreateReplyMessage)
 		if !ok {
-			spew.Dump(m, ok)
 			panic("Type conversion failed")
 		}
 		if m.Status != "ok" {
