@@ -2,22 +2,15 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 )
 
 func listGroups(db *sql.DB, principal string) (groups []string, err error) {
-	rows, err := db.Query("SELECT * FROM acl_non_hierarchical WHERE principal = $1 AND acl_type = 'group_manage'", principal)
-	if err != nil {
-		log.Fatal(err)
-		return []string{}, err
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		return []string{}, errors.New("Permission denied")
+	if err = CheckAclNonHierarchical(db, principal, "group_manage"); err != nil {
+		return
 	}
 
-	rows, err = db.Query("SELECT name FROM groups")
+	rows, err := db.Query("SELECT name FROM groups")
 	if err != nil {
 		log.Fatal(err)
 		return []string{}, err
@@ -37,14 +30,21 @@ func listGroups(db *sql.DB, principal string) (groups []string, err error) {
 }
 
 func createGroup(db *sql.DB, principal, group string) (err error) {
-	rows, err := db.Query("SELECT * FROM acl_non_hierarchical WHERE principal = $1 AND acl_type = 'group_manage'", principal)
+	if err = CheckAclNonHierarchical(db, principal, "group_manage"); err != nil {
+		return
+	}
+
+	_, err = db.Exec("INSERT INTO groups(name) VALUES ($1)", group)
 	if err != nil {
 		log.Fatal(err)
 		return err
 	}
-	defer rows.Close()
-	if !rows.Next() {
-		return errors.New("Permission denied")
+	return err
+}
+
+func deleteGroup(db *sql.DB, principal, group string) (err error) {
+	if err = CheckAclNonHierarchical(db, principal, "group_manage"); err != nil {
+		return
 	}
 
 	_, err = db.Exec("INSERT INTO groups(name) VALUES ($1)", group)
