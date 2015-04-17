@@ -2,29 +2,56 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
+	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/fastly/secretd/model/message"
 	"github.com/fastly/secretd/model/message/client"
 	"log"
 	"net"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 var principal string
 var action string
+var runFromSSH bool
 
 var flagvar int
 
 func init() {
 	flag.StringVar(&principal, "principal", "", "principal to authorize as")
 	flag.StringVar(&action, "action", "", "action")
+	flag.BoolVar(&runFromSSH, "ssh", false, "look to SSH_ORIGINAL_COMMAND for action")
+}
+
+// parseOriginalCommand, unsurprisingly parses the
+// SSH_ORIGINAL_COMMAND setting. It does that via a regex, since SSH
+// provides absolutely no useful help for parsing it ourselves.  This
+// means some crazy key names won't work.
+//
+// XXX: tests
+func parseOriginalCommand() (action string, args []string, err error) {
+	r, err := regexp.Compile(`secret-shell --action ([\w.-]+)\s+((?:[\w-,+/=]+\s*)+)?$`)
+	if err != nil {
+		panic(err)
+	}
+	m := r.FindStringSubmatch(os.Getenv("SSH_ORIGINAL_COMMAND"))
+	if m == nil {
+		return action, args, errors.New("Malformed command")
+	}
+	action = m[1]
+	args = strings.Split(m[2], " ")
+	return
 }
 
 func main() {
 	flag.Parse()
 
-	if principal == "" || action == "" {
+	if principal == "" || (action == "" && !runFromSSH) {
 		flag.Usage()
 		return
 	}
@@ -37,7 +64,6 @@ func main() {
 	defer c.Close()
 
 	/* Authorize */
-	// XXX: grab from command line flag
 	authorizationMessage := message.NewAuthorizationMessage(principal)
 	client.SendMessage(c, authorizationMessage)
 	m, err := client.GetMessage(c)
@@ -47,10 +73,19 @@ func main() {
 	if m.(*message.AuthorizationReplyMessage).Status != "ok" {
 		panic(m)
 	}
+	args := flag.Args()
+	if runFromSSH {
+		// Parse action from
+		action, args, err = parseOriginalCommand()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// XXX: Don't for loop, do a switch on command. for loop would be for reply.
 	switch action {
 	case "secret.get":
-		client.SendMessage(c, message.NewSecretGetMessage(flag.Args()))
+		client.SendMessage(c, message.NewSecretGetMessage(args))
 		m, err = client.GetMessage(c)
 		if err != nil {
 			panic(err)
@@ -72,7 +107,7 @@ func main() {
 			panic(err)
 		}
 		secret = secret[:len(secret)-1]
-		client.SendMessage(c, message.NewSecretPutMessage(flag.Args(), secret))
+		client.SendMessage(c, message.NewSecretPutMessage(args, secret))
 		m, err = client.GetMessage(c)
 		if err != nil {
 			panic(err)
@@ -88,7 +123,7 @@ func main() {
 		}
 		println("Secret updated")
 	case "secret.list":
-		client.SendMessage(c, message.NewSecretListMessage(flag.Args()))
+		client.SendMessage(c, message.NewSecretListMessage(args))
 		m, err = client.GetMessage(c)
 		if err != nil {
 			panic(err)
@@ -124,7 +159,7 @@ func main() {
 			println(key)
 		}
 	case "group.create":
-		client.SendMessage(c, message.NewGroupCreateMessage(flag.Arg(0)))
+		client.SendMessage(c, message.NewGroupCreateMessage(args[0]))
 		m, err = client.GetMessage(c)
 		if err != nil {
 			panic(err)
