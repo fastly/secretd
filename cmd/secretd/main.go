@@ -114,12 +114,10 @@ func secretServer(c net.Conn, db *sql.DB) {
 	var principal string
 	/* Do authorization first */
 	authMessage, err := model.GetMessage(c)
-	spew.Dump(authMessage, err)
 	if err != nil {
 		return
 	}
 	/* State machine */
-	spew.Dump(authMessage)
 	switch m := authMessage.(type) {
 	case *message.AuthorizationMessage:
 		principal = m.Principal
