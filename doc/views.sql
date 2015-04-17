@@ -62,3 +62,12 @@ ON      p.principal_id = g.principal_id
 WHERE a.secret_id IS NULL;
 
 GRANT SELECT on acl_non_hierarchical TO secretd;
+
+CREATE OR REPLACE VIEW acl_group_tree AS
+SELECT  g.name AS grp, acl_types.name AS acl_type, s.*
+FROM    acls a
+JOIN    acl_types USING (acl_type_id)
+JOIN    groups g USING (group_id)
+JOIN    secret_tree s ON arraycontains(s.path_id, ARRAY[a.secret_id]);
+
+GRANT SELECT on acl_group_tree TO secretd;
