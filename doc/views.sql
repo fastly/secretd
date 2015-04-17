@@ -1,11 +1,11 @@
 CREATE OR REPLACE VIEW secret_tree AS WITH RECURSIVE
-search_graph(secret_id, parent, path, key, value) AS
+search_graph(secret_id, parent, path, key, value, path_id) AS
 (
-SELECT  secret_id, parent, ARRAY[key], key, value
+SELECT  secret_id, parent, ARRAY[key], key, value, ARRAY[secret_id]
 FROM    secrets
 WHERE parent IS NULL
 UNION ALL
-SELECT  s.secret_id, s.parent, sg.path|| s.key, s.key, s.value
+SELECT  s.secret_id, s.parent, sg.path|| s.key, s.key, s.value, sg.path_id || s.secret_id
 FROM    search_graph sg
 JOIN    secrets s
 ON      s.parent = sg.secret_id
@@ -31,7 +31,7 @@ JOIN    principals p
 ON      p.principal_id = g.principal_id
 WHERE parent IS NULL
 UNION ALL
-SELECT  s.secret_id, ag.path || s.key, p.name, acl_types.name
+SELECT DISTINCT s.secret_id, ag.path || s.key, p.name, acl_types.name
 FROM    acl_graph ag
 JOIN    secrets s
 ON      s.parent = ag.secret_id
