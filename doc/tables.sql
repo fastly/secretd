@@ -22,7 +22,8 @@ CREATE TABLE acls (
        acl_id serial PRIMARY KEY,
        secret_id int REFERENCES secrets ON DELETE CASCADE,
        group_id int NOT NULL REFERENCES groups ON DELETE CASCADE,
-       acl_type_id int NOT NULL REFERENCES acl_types
+       acl_type_id int NOT NULL REFERENCES acl_types,
+       UNIQUE (secret_id, group_id, acl_type_id)
 );
 GRANT SELECT, INSERT, UPDATE, DELETE ON acls to secretd;
 
