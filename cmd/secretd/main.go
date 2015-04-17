@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net"
+	"os"
 	"strings"
 )
 
@@ -199,11 +200,134 @@ func secretServer(c net.Conn, db *sql.DB) {
 			err := createGroup(db, principal, m.Group)
 			if err != nil {
 				log.Printf("Something went wrong: %s\n", err)
-				reply := message.GroupListReplyMessage{Action: "group.create", Status: "error", Reason: err.Error()}
+				reply := message.GroupCreateReplyMessage{Action: "group.create", Status: "error", Reason: err.Error()}
 				model.SendReply(c, reply)
 				continue
 			}
 			resp := message.NewGroupCreateReplyMessage("ok")
+			err = model.SendReply(c, resp)
+		case *message.GroupDeleteMessage:
+			err := deleteGroup(db, principal, m.Group)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.GroupDeleteReplyMessage{Action: "group.delete", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewGroupDeleteReplyMessage("ok")
+			err = model.SendReply(c, resp)
+		case *message.GroupMemberListMessage:
+			members, err := groupMemberList(db, principal, m.Group)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.GroupMemberListReplyMessage{Action: "group.member_list", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewGroupMemberListReplyMessage("ok", members)
+			err = model.SendReply(c, resp)
+		case *message.GroupMemberAddMessage:
+			err := groupMemberAdd(db, principal, m.Group, m.Principal)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.GroupMemberAddReplyMessage{Action: "group.member_add", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewGroupMemberAddReplyMessage("ok")
+			err = model.SendReply(c, resp)
+		case *message.GroupMemberRemoveMessage:
+			err := groupMemberRemove(db, principal, m.Group, m.Principal)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.GroupMemberRemoveReplyMessage{Action: "group.member_remove", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewGroupMemberRemoveReplyMessage("ok")
+			err = model.SendReply(c, resp)
+		case *message.AclGetMessage:
+			groups, err := aclGet(db, principal, m.Key)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.AclGetReplyMessage{Action: "acl.get", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewAclGetReplyMessage("ok", groups)
+			err = model.SendReply(c, resp)
+		case *message.AclSetMessage:
+			err := aclSet(db, principal, m.Key, m.Group, m.Permissions)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.AclSetReplyMessage{Action: "acl.set", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewAclSetReplyMessage("ok")
+			err = model.SendReply(c, resp)
+		case *message.EnrolMessage:
+			err := enrol(db, principal, m.Principal, m.Key)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.EnrolReplyMessage{Action: "enrol", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+
+			lines, err := generateAuthorizedKeys(db)
+
+			// XXX: hard coded
+			authorizedKeys, err := os.Create("/tmp/authfile.tmp")
+			if err != nil {
+				panic(err)
+			}
+
+			for _, l := range lines {
+				_, err = authorizedKeys.WriteString(l)
+				if err != nil {
+					// XXX: log
+					panic(err)
+				}
+			}
+			authorizedKeys.Close()
+			err = os.Rename("/tmp/authfile.tmp", "/tmp/authfile")
+			if err != nil {
+				// XXX: log
+				panic(err)
+			}
+
+			resp := message.NewEnrolReplyMessage("ok")
+			err = model.SendReply(c, resp)
+		case *message.PrincipalListMessage:
+			principals, err := listPrincipals(db, principal)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.PrincipalListReplyMessage{Action: "principal.list", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewPrincipalListReplyMessage("ok", principals)
+			err = model.SendReply(c, resp)
+		case *message.PrincipalCreateMessage:
+			err := createPrincipal(db, principal, m.Principal, m.SSHKey, m.Provisioned)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.GroupCreateReplyMessage{Action: "principal.create", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewPrincipalCreateReplyMessage("ok")
+			err = model.SendReply(c, resp)
+		case *message.PrincipalDeleteMessage:
+			err := deletePrincipal(db, principal, m.Principal)
+			if err != nil {
+				log.Printf("Something went wrong: %s\n", err)
+				reply := message.PrincipalDeleteReplyMessage{Action: "principal.delete", Status: "error", Reason: err.Error()}
+				model.SendReply(c, reply)
+				continue
+			}
+			resp := message.NewPrincipalDeleteReplyMessage("ok")
 			err = model.SendReply(c, resp)
 		default:
 			panic("Unknown message:")

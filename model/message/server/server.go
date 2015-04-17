@@ -31,6 +31,26 @@ func GetMessage(r io.Reader) (ret message.GenericMessage, err error) {
 		ret = new(message.GroupListMessage)
 	case "group.create":
 		ret = new(message.GroupCreateMessage)
+	case "group.delete":
+		ret = new(message.GroupDeleteMessage)
+	case "group.member_list":
+		ret = new(message.GroupMemberListMessage)
+	case "group.member_add":
+		ret = new(message.GroupMemberAddMessage)
+	case "group.member_remove":
+		ret = new(message.GroupMemberRemoveMessage)
+	case "principal.list":
+		ret = new(message.PrincipalListMessage)
+	case "principal.create":
+		ret = new(message.PrincipalCreateMessage)
+	case "principal.delete":
+		ret = new(message.PrincipalDeleteMessage)
+	case "acl.get":
+		ret = new(message.AclGetMessage)
+	case "acl.set":
+		ret = new(message.AclSetMessage)
+	case "enrol":
+		ret = new(message.EnrolMessage)
 	default:
 		// XXX: handle this more gracefully
 		panic("Unknown message type")

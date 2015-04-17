@@ -94,6 +94,28 @@ func NewSecretListReplyMessage(status string, keys []string) SecretListReplyMess
 	return m
 }
 
+type EnrolMessage struct {
+	Action    string `json:"action"`
+	Principal string `json:"principal"`
+	Key       string `json:"key"`
+}
+
+func NewEnrolMessage(principal, key string) EnrolMessage {
+	m := EnrolMessage{Action: "enrol", Principal: principal, Key: key}
+	return m
+}
+
+type EnrolReplyMessage struct {
+	Action string `json:"action"`
+	Status string `json:"status"`
+	Reason string `json:"reason,omitempty"`
+}
+
+func NewEnrolReplyMessage(status string) EnrolReplyMessage {
+	m := EnrolReplyMessage{Action: "enrol", Status: status}
+	return m
+}
+
 type GenericReply interface {
 }
 
