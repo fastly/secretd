@@ -132,12 +132,12 @@ Returns a list of the key's immediate children keys.
     {
 		"action": "acl.set",
 		"key": ["a", "b", "c"],
-		"subject": "cache-lcy1120",
+		"group": "ops",
 		"permissions": [ "read" ]
     }
 
-Replaces any existing ACLs for the particular subject.  An empty
-permissions set will delete the ACL for the user.
+Replaces any existing ACLs for the particular group.  An empty
+permissions set will delete the ACL for the group.
 
 ### retrieving ACLs
 
@@ -152,9 +152,6 @@ Return value:
 		"groups": {
 			"ops": [ "read", "write" ]
 		},
-		"principals": {
-			"cache-lcy1120": [ "read" ]
-		}
     }
 
 ### group management
@@ -165,8 +162,6 @@ Return value:
 		"action": "group.create",
 		"group": "ops"
     }
-
-
 
 #### add member to group
 
@@ -184,10 +179,10 @@ Return value:
 		"member": "tfheen"
     }
 
-#### retrieve group
+#### retrieve group members
 
     {
-		"action": "group.get",
+		"action": "group.member_list",
 		"group": "ops"
     }
 
@@ -216,6 +211,42 @@ Return value:
 
 Lists all groups
 
+### principal management
+
+#### create principal
+
+    {
+		"action": "principal.create",
+		"principal": "foo",
+		"key": "ssh-rsa …",
+		"provisioned": true
+    }
+
+#### delete principal
+
+    {
+		"action": "principal.delete",
+		"group": "foo"
+    }
+
+#### list principals
+
+    {
+		"action": "principal.list",
+    }
+
+Return value:
+
+    {
+		"action": "principal.list",
+		"principals": [
+			"foo",
+			"bar"
+		]
+    }
+
+Lists all principals.
+
 ## ACL primitives
 
 ACLs are additive and positive, there is no way to grant A access to
@@ -229,7 +260,7 @@ The permission to read the value part of a secret
 
 The ability to update the value of a secret
 
-### grant
+### manage
 
 The ability to give other principals rights to read, write or discover
 a secret
@@ -242,7 +273,12 @@ The ability to find a secret and discover any leaf nodes.
 
 The ability to create, update and remove groups.  The key is in this
 case null.  For the initial implementation, this is a binary flag.
-This might change in later releases.
+
+### principal_manage
+
+The ability to create, update and remove principals.  The key is in
+this case null.  For the initial implementation, this is a binary
+flag.
 
 ### enrol
 
@@ -256,17 +292,20 @@ a binary flag.
 all is the group that is magically populated by all principals.  It
 can be granted permissions as any other group.
 
+XXX: hard to implement.  Needed?
+
 ## what do we need to build?
 
-- database schema
-- socket protocol
-- define ACLs
+✓ database schema
+✓ socket protocol
+✓ define ACLs
 
 - logging
 - cli utility
 - server
-- key enrolment
-  - generate authorized_keys file
+✓ key enrolment
+  ✓ generate authorized_keys file
+
 
 ## XXX Things to figure out
 
@@ -279,3 +318,9 @@ can be granted permissions as any other group.
 - lock down ssh options (from, forcecommand)
 
 - return messages, including errors
+
+- audit logs, log to syslog or in db?
+
+- message for setting encryption key
+
+- user list/create/delete/show
