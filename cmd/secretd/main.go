@@ -189,7 +189,7 @@ func secretServer(c net.Conn, db *sql.DB) {
 			groups, err := listGroups(db, principal)
 			if err != nil {
 				log.Printf("Something went wrong: %s\n", err)
-				reply := message.GroupListReplyMessage{Action: "secret.list", Status: "error", Reason: err.Error()}
+				reply := message.GroupListReplyMessage{Action: "group.list", Status: "error", Reason: err.Error()}
 				model.SendReply(c, reply)
 				continue
 			}
