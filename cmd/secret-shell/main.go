@@ -170,6 +170,6 @@ func main() {
 		}
 		println("Group created")
 	default:
-		log.Fatal("Unknown action %s", action)
+		log.Fatal("Unknown action: ", action)
 	}
 }
